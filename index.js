@@ -5,6 +5,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.set('view engine', 'ejs');
 
+const md5 = require('md5');
+
 const mongoose = require('mongoose');
 const Schema = require('mongoose').Schema;
 const database = 'mongodb://localhost/CLXLCK';
@@ -62,7 +64,7 @@ var checkRegisterInfo = function (req, res, next) {
 
         var newUser = new User();
         newUser.email = req.body.email;
-        newUser.password = req.body.password1;
+        newUser.password = md5(String(req.body.password1));
         newUser.permission = 0;
 
         newUser.save((err) => {
@@ -75,14 +77,47 @@ var checkRegisterInfo = function (req, res, next) {
     });
 }
 
+var checkLogins = function (req, res, next) {
+    User.findOne({ email: req.body.email, password: md5(String(req.body.password)) }, function (err, user) {
+        if (err) {
+            return next(err);
+        }
+
+        res.locals.user = user;
+        return next();
+    });
+}
+
+var sessionHandler = function (req, res, next) {
+    if (res.locals.user === null) {
+        return next();
+    }
+
+    var newUser = {
+        email: res.locals.user.email,
+        permission: res.locals.user.permission
+    };
+
+    req.session.user = newUser;
+    return req.session.save(err => res.redirect('/user/worklist'));
+}
+
 app.use('/register', checkRegisterInfo,
     (req, res) => {
-        res.render('registration');
-    })
+        res.render('register');
+    });
 
-app.use('/', (req, res) => {
-    res.render('index');
-})
+app.use('/user/worklist', (req, res) => {
+    res.locals.user = req.session.user;
+    res.render('worklist');
+});
+
+app.use('/',
+    checkLogins,
+    sessionHandler, 
+    (req, res) => {
+        res.render('index');
+    });
 
 app.use((err, req, res) => {
     res.end('Problem...');
