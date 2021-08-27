@@ -99,7 +99,7 @@ var sessionHandler = function (req, res, next) {
     };
 
     req.session.user = newUser;
-    return req.session.save(err => res.redirect('/user/worklist'));
+    return req.session.save(err => res.redirect('/worklist'));
 }
 
 app.use('/register', checkRegisterInfo,
@@ -107,12 +107,19 @@ app.use('/register', checkRegisterInfo,
         res.render('register');
     });
 
-app.use('/user/worklist', (req, res) => {
+app.use('/worklist', (req, res) => {
     res.locals.user = req.session.user;
     res.render('worklist');
 });
 
 app.use('/',
+    function(req, res, next) {
+        if(req.session.user === 'undefined') {
+            return next();
+        }
+
+        res.redirect('/worklist');
+    },
     checkLogins,
     sessionHandler, 
     (req, res) => {
