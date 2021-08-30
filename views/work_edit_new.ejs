@@ -1,0 +1,30 @@
+<%- include('header') -%>
+    <%- include('menu') -%>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-sm-12 col-md-8 col-xl-8">
+                    <form method="POST">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="form-group">
+                                            <input type="text" class="form-control" placeholder="Enter name" name="name"
+                                                value="<%= (typeof work === 'undefined') ? '' : work.name %>">
+                                        </div>
+                                    </td>
+                                </tr>
+                    </form>
+                    </tbody>
+                    </table>
+                    <input type="submit" margin-top:10px; class="btn btn-primary" value="Save" />
+                    <a href="/worklist" class="btn btn-danger">Cancel</a>
+                </div>
+            </div>
+        </div>
+        <%- include('footer') -%>

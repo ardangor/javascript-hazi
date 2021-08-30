@@ -30,29 +30,22 @@ const server = app.listen(3000, function () {
 
 const User = mongoose.model('User', {
     email: String,
+    username: String,
     password: String,
     permission: Number
 });
 
 const Work = mongoose.model('Work', {
-    name: String,
-    _user: {
-        type: Schema.Types.ObjectId,
-        ref: 'User'
-    }
+    name: String
 });
 
 var checkRegisterInfo = function (req, res, next) {
     res.locals.saved = req.body;
 
     if (typeof req.body.email === 'undefined' ||
+        typeof req.body.username === 'undefined' ||
         typeof req.body.password1 === 'undefined' ||
         typeof req.body.password2 === 'undefined') {
-        return next();
-    }
-
-    if (req.body.password1 !== req.body.password2) {
-        res.locals.wrongpassword = null;
         return next();
     }
 
@@ -62,11 +55,18 @@ var checkRegisterInfo = function (req, res, next) {
         }
 
         if (user !== null) {
+            res.locals.emailinuse = null;
+            return next();
+        }
+
+        if (req.body.password1 !== req.body.password2) {
+            res.locals.wrongpassword = null;
             return next();
         }
 
         var newUser = new User();
         newUser.email = req.body.email;
+        newUser.username = req.body.username;
         newUser.password = md5(String(req.body.password1));
         newUser.permission = 0;
 
@@ -80,7 +80,7 @@ var checkRegisterInfo = function (req, res, next) {
     });
 }
 
-var checkLogins = function (req, res, next) {
+var checkLoginInfo = function (req, res, next) {
     res.locals.saved = req.body;
 
     User.findOne({ email: req.body.email, password: md5(String(req.body.password)) }, function (err, user) {
@@ -88,16 +88,17 @@ var checkLogins = function (req, res, next) {
             return next(err);
         }
 
-        if(user !== null) {
+        if (user !== null) {
             res.locals.user = user;
         }
-        
+
         return next();
     });
 }
 
-var sessionHandler = function (req, res, next) {
+var sessionCreater = function (req, res, next) {
     if (typeof res.locals.user === 'undefined') {
+        res.locals.wrongpassword = null;
         return next();
     }
 
@@ -117,38 +118,222 @@ var sessionHandler = function (req, res, next) {
     });
 }
 
-app.use('/register', checkRegisterInfo,
-    (req, res) => {
-        res.render('register');
-    });
+var renderPage = function (pageName) {
+    return function (req, res) {
+        res.render(pageName);
+    }
+}
 
-app.use('/worklist', (req, res) => {
+var isLoggedIn = (req, res, next) => {
 
     if (typeof req.session.user === 'undefined') {
         return res.redirect('/');
     }
 
     res.locals.user = req.session.user;
-    res.render('worklist');
-});
+    return next();
+}
 
-app.use('/persons', function (req, res) {
+var havePermission = function (permissionLevel) {
+    return function (req, res, next) {
+        if (typeof req.session.user === 'undefined' || req.session.user.permission !== permissionLevel) {
+            return res.redirect('/');
+        }
 
-    if (typeof req.session.user === 'undefined') {
-        return res.redirect('/');
+        return next();
     }
+}
 
-    res.locals.user = req.session.user;
-    res.render('worklist');
-});
-
-app.use('/logout', function (req, res) {
+var destroySession = function (req, res) {
     req.session.destroy(err => {
         return res.redirect('/');
     });
-});
+}
 
-app.use('/',
+var getUsers = function (req, res, next) {
+    User.find({}, function (err, users) {
+        if (err) {
+            return next(err);
+        }
+
+        res.locals.users = users;
+        return next();
+    });
+}
+
+var getWorks = function (req, res, next) {
+    Work.find({}, function (err, worklist) {
+        if (err) {
+            return next(err);
+        }
+
+        res.locals.worklist = worklist;
+        return next();
+    });
+}
+
+var getWork = function (req, res, next) {
+    Work.findOne({ _id: req.params.work_id }, function (err, work) {
+        if (err) {
+            return next(err);
+        }
+
+        if (work !== null) {
+            res.locals.work = work;
+        }
+
+        return next();
+    });
+}
+
+var saveWork = function (req, res, next) {
+    if (typeof req.body.name === 'undefined') {
+        return next();
+    }
+
+    if (typeof res.locals.work === 'undefined') {
+        res.locals.work = new Work();
+    }
+
+    res.locals.work.name = req.body.name;
+
+    res.locals.work.save(err => {
+        if (err) {
+            return next(err);
+        }
+
+        return res.redirect('/worklist');
+    });
+}
+
+var deleteWork = function(req, res, next) {
+    if (typeof res.locals.work === 'undefined') {
+        return next();
+    }
+
+    res.locals.work.remove(err => {
+        if (err) {
+            return next(err);
+        }
+
+        return res.redirect('/worklist')
+    });
+}
+
+var getUser = function(req, res, next) {
+    User.findOne({ _id: req.params.user_id }, function (err, user) {
+        if (err) {
+            return next(err);
+        }
+
+        if (user !== null) {
+            res.locals.user = user;
+        }
+
+        return next();
+    });
+}
+
+var saveUser = function(req, res, next) {
+    if (typeof req.body.email === 'undefined' ||
+    typeof req.body.username === 'undefined' ||
+    typeof req.body.permission === 'undefined') {
+        return next();
+    }
+
+    if (typeof res.locals.user === 'undefined') {
+        res.locals.user = new User();
+    }
+
+    res.locals.user.email = req.body.email;
+    res.locals.user.username = req.body.username;
+    res.locals.user.permission = req.body.permission;
+
+    res.locals.user.save(err => {
+        if (err) {
+            return next(err);
+        }
+
+        return res.redirect('/users');
+    });
+}
+
+var deleteUser = function(req, res, next) {
+    if (typeof res.locals.user === 'undefined') {
+        return next();
+    }
+
+    res.locals.user.remove(err => {
+        if (err) {
+            return next(err);
+        }
+
+        return res.redirect('/users')
+    });
+}
+
+app.use('/register',
+    (req, res, next) => {
+
+        if (typeof req.session.user !== 'undefined') {
+            return res.redirect('/worklist');
+        }
+
+        res.locals.user = req.session.user;
+        return next();
+    },
+    checkRegisterInfo,
+    renderPage('register'));
+
+app.use('/worklist/new-work',
+    isLoggedIn,
+    havePermission(1),
+    getWork,
+    saveWork,
+    renderPage('work_edit_new'));
+
+app.use('/worklist/edit-work/:work_id',
+    isLoggedIn,
+    havePermission(1),
+    getWork,
+    saveWork,
+    renderPage('work_edit_new'));
+
+app.use('/worklist/delete-work/:work_id',
+    isLoggedIn,
+    havePermission(1),
+    getWork,
+    deleteWork);
+
+app.use('/worklist',
+    isLoggedIn,
+    havePermission(1),
+    getWorks,
+    renderPage('worklist'));
+
+app.use('/users/edit-user/:user_id',
+    isLoggedIn,
+    havePermission(1),
+    getUser,
+    saveUser,
+    renderPage('user_edit'));
+
+app.use('/users/delete-user/:user_id',
+    isLoggedIn,
+    havePermission(1),
+    getUser,
+    deleteUser);
+
+app.use('/users',
+    isLoggedIn,
+    havePermission(1),
+    getUsers,
+    renderPage('users'));
+
+app.use('/logout',
+    destroySession);
+
+app.post('/',
     function (req, res, next) {
         if (typeof req.session.user === 'undefined') {
             return next();
@@ -156,13 +341,21 @@ app.use('/',
 
         return res.redirect('/worklist');
     },
-    checkLogins,
-    sessionHandler,
-    (req, res) => {
-        res.render ('index');
-    });
+    checkLoginInfo,
+    sessionCreater,
+    renderPage('index'));
 
-app.use((err, req, res) => {
-    res.end('Problem...');
+app.get('/',
+    function (req, res, next) {
+        if (typeof req.session.user === 'undefined') {
+            return next();
+        }
+
+        return res.redirect('/worklist');
+    },
+    renderPage('index'));
+
+app.use((err, req, res, next) => {
+    res.end("Problem...");
     console.log(err);
 });
