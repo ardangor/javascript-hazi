@@ -159,7 +159,7 @@ app.use('/',
     checkLogins,
     sessionHandler,
     (req, res) => {
-        res.render('index');
+        res.render ('index');
     });
 
 app.use((err, req, res) => {
