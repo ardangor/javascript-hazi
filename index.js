@@ -36,7 +36,9 @@ const User = mongoose.model('User', {
 });
 
 const Work = mongoose.model('Work', {
-    name: String
+    name: String,
+    priority: Number,
+    users: []
 });
 
 var checkRegisterInfo = function (req, res, next) {
@@ -104,6 +106,7 @@ var sessionCreater = function (req, res, next) {
 
     var newUser = {
         email: res.locals.user.email,
+        username: res.locals.user.username,
         permission: res.locals.user.permission
     };
 
@@ -130,7 +133,7 @@ var isLoggedIn = (req, res, next) => {
         return res.redirect('/');
     }
 
-    res.locals.user = req.session.user;
+    res.locals.session_user = req.session.user;
     return next();
 }
 
@@ -206,7 +209,7 @@ var saveWork = function (req, res, next) {
     });
 }
 
-var deleteWork = function(req, res, next) {
+var deleteWork = function (req, res, next) {
     if (typeof res.locals.work === 'undefined') {
         return next();
     }
@@ -220,7 +223,7 @@ var deleteWork = function(req, res, next) {
     });
 }
 
-var getUser = function(req, res, next) {
+var getUser = function (req, res, next) {
     User.findOne({ _id: req.params.user_id }, function (err, user) {
         if (err) {
             return next(err);
@@ -234,10 +237,10 @@ var getUser = function(req, res, next) {
     });
 }
 
-var saveUser = function(req, res, next) {
+var saveUser = function (req, res, next) {
     if (typeof req.body.email === 'undefined' ||
-    typeof req.body.username === 'undefined' ||
-    typeof req.body.permission === 'undefined') {
+        typeof req.body.username === 'undefined' ||
+        typeof req.body.permission === 'undefined') {
         return next();
     }
 
@@ -258,7 +261,7 @@ var saveUser = function(req, res, next) {
     });
 }
 
-var deleteUser = function(req, res, next) {
+var deleteUser = function (req, res, next) {
     if (typeof res.locals.user === 'undefined') {
         return next();
     }
@@ -311,12 +314,19 @@ app.use('/worklist',
     getWorks,
     renderPage('worklist'));
 
+app.use('/users/new-user',
+    isLoggedIn,
+    havePermission(1),
+    getUser,
+    saveUser,
+    renderPage('user_edit_new'));
+
 app.use('/users/edit-user/:user_id',
     isLoggedIn,
     havePermission(1),
     getUser,
     saveUser,
-    renderPage('user_edit'));
+    renderPage('user_edit_new'));
 
 app.use('/users/delete-user/:user_id',
     isLoggedIn,
