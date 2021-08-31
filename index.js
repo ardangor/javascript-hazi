@@ -155,7 +155,7 @@ var destroySession = function (req, res) {
 
 var getUsers = function (req, res, next) {
     User.find({}, function (err, users) {
-        if (err) {
+        if (err) { 
             return next(err);
         }
 
@@ -275,6 +275,10 @@ var deleteUser = function (req, res, next) {
     });
 }
 
+var addSelectedUsers = function (req, res, next) {
+
+}
+
 app.use('/register',
     (req, res, next) => {
 
@@ -294,6 +298,14 @@ app.use('/worklist/new-work',
     getWork,
     saveWork,
     renderPage('work_edit_new'));
+
+app.use('/worklist/edit-work/:work_id/add-users',
+    isLoggedIn,
+    havePermission(1),
+    getUsers,
+    getWork,
+    addSelectedUsers,
+    renderPage('users_add_to_work'));
 
 app.use('/worklist/edit-work/:work_id',
     isLoggedIn,
