@@ -1,31 +1,40 @@
 <%- include('header') -%>
-  <%- include('menu') -%>
-    <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-sm-12 col-md-8 col-xl-8">
-          <table class="table table-striped">
-            <thead>
-              <tr>
-                <th scope="col">Name</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% worklist.forEach(function(work){ %>
-                <tr>
-                  <td>
-                    <%= work.name %>
-                  </td>
-                  <td style="width:30px; white-space: nowrap">
-                    <a href="/worklist/edit-work/<%= work._id %>">Edit</a>
-                    <a href="/worklist/delete-work/<%= work._id %>">Delete</a>
-                  </td>
-                </tr>
-                <% }); %>
-            </tbody>
-          </table>
-          <a href="/worklist/new-work"><button type="button" class="btn btn-primary float-end">Add
-              new</button></a>
+    <%- include('menu') -%>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-sm-12 col-md-8 col-xl-8">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th scope="col">Name</th>
+                                <th scope="col">Priority</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% worklist.forEach(function(work){ %>
+                                <tr>
+                                    <td>
+                                        <%= work.name %>
+                                    </td>
+                                    <td>
+                                        <%= work.priority %>
+                                    </td>
+
+                                    <% if(typeof alterview==='undefined' ) { %>
+                                        <td style="width:30px; white-space: nowrap">
+                                            <a href="/worklist/edit-work/<%= work._id %>">Edit</a>
+                                            <a href="/worklist/delete-work/<%= work._id %>">Delete</a>
+                                        </td>
+                                        <% } %>
+                                </tr>
+                                <% }); %>
+                        </tbody>
+                    </table>
+                    <% if(typeof alterview==='undefined' ) { %>
+                        <a href="/worklist/new-work"><button type="button" class="btn btn-primary float-end">Add
+                                new</button></a>
+                        <% } %>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-    <%- include('footer') -%>
+        <%- include('footer') -%>

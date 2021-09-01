@@ -8,6 +8,7 @@
                             <thead>
                                 <tr>
                                     <th scope="col">Name</th>
+                                    <th scope="col">Priority</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -18,12 +19,53 @@
                                                 value="<%= (typeof work === 'undefined') ? '' : work.name %>">
                                         </div>
                                     </td>
+
+                                    <td>
+                                        <div class="form-group">
+                                            <input type="number" class="form-control" placeholder="Enter priority"
+                                                name="priority"
+                                                value="<%= (typeof work === 'undefined') ? '' : work.priority %>">
+                                        </div>
+                                    </td>
                                 </tr>
                     </form>
                     </tbody>
                     </table>
-                    <input type="submit" margin-top:10px; class="btn btn-primary" value="Save" />
-                    <a href="/worklist" class="btn btn-danger">Cancel</a>
+                    <% if(typeof work !== 'undefined' ) { %>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Email</th>
+                                    <th scope="col">Username</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (typeof users !=='undefined' ) { %>
+                                    <% users.forEach(function(user){ %>
+                                        <tr>
+                                            <td>
+                                                <%= user.email %>
+                                            </td>
+                                            <td>
+                                                <%= user.username%>
+                                            </td>
+                                            <td style="width:30px; white-space: nowrap">
+                                                <a
+                                                    href="/worklist/edit-work/<%= work._id %>/add-user/<%= user._id %>">Add</a>
+                                            </td>
+
+                                            <td style="width:30px; white-space: nowrap">
+                                                <a
+                                                    href="/worklist/edit-work/<%= work._id %>/remove-user/<%= user._id %>">Remove</a>
+                                            </td>
+                                        </tr>
+                                        <% }); %>
+                                            <% } %>
+                            </tbody>
+                        </table>
+                        <% } %>
+                            <input type="submit" margin-top:10px; class="btn btn-primary" value="Save" />
+                            <a href="/worklist" class="btn btn-danger">Cancel</a>
                 </div>
             </div>
         </div>

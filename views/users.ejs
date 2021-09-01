@@ -1,5 +1,5 @@
 <%- include('header') -%>
-    <%- include('menu') -%>
+  <%- include('menu') -%>
     <div class="container">
       <div class="row justify-content-center">
         <div class="col-sm-12 col-md-8 col-xl-8">
@@ -24,7 +24,7 @@
                     <%= user.permission%>
                   </td>
                   <td style="width:30px; white-space: nowrap">
-                    <a href="/works/<%= user._id %>">Works</a>
+                    <a href="/users/worklist-user/<%= user._id %>">Works</a>
                     <a href="/users/edit-user/<%= user._id %>">Edit</a>
                     <a href="/users/delete-user/<%= user._id %>">Delete</a>
                   </td>
@@ -37,4 +37,4 @@
         </div>
       </div>
     </div>
-        <%- include('footer') -%>
+    <%- include('footer') -%>

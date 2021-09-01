@@ -38,7 +38,7 @@ const User = mongoose.model('User', {
 const Work = mongoose.model('Work', {
     name: String,
     priority: Number,
-    users: []
+    users: [String]
 });
 
 var checkRegisterInfo = function (req, res, next) {
@@ -139,7 +139,7 @@ var isLoggedIn = (req, res, next) => {
 
 var havePermission = function (permissionLevel) {
     return function (req, res, next) {
-        if (typeof req.session.user === 'undefined' || req.session.user.permission !== permissionLevel) {
+        if (req.session.user.permission !== permissionLevel) {
             return res.redirect('/');
         }
 
@@ -155,7 +155,7 @@ var destroySession = function (req, res) {
 
 var getUsers = function (req, res, next) {
     User.find({}, function (err, users) {
-        if (err) { 
+        if (err) {
             return next(err);
         }
 
@@ -190,7 +190,8 @@ var getWork = function (req, res, next) {
 }
 
 var saveWork = function (req, res, next) {
-    if (typeof req.body.name === 'undefined') {
+    if (typeof req.body.name === 'undefined' ||
+        typeof req.body.priority == 'undefined') {
         return next();
     }
 
@@ -199,6 +200,7 @@ var saveWork = function (req, res, next) {
     }
 
     res.locals.work.name = req.body.name;
+    res.locals.work.priority = req.body.priority;
 
     res.locals.work.save(err => {
         if (err) {
@@ -275,8 +277,43 @@ var deleteUser = function (req, res, next) {
     });
 }
 
-var addSelectedUsers = function (req, res, next) {
+var addSelectedUser = function (req, res, next) {
+    res.locals.work.users.push(res.locals.user.email);
 
+    res.locals.work.save(err => {
+        if (err) {
+            return next(err);
+        }
+
+        return res.redirect(`/worklist/edit-work/${res.locals.work._id}`);
+    });
+}
+
+var removeSelectedUser = function (req, res, next) {
+    res.locals.work.users.remove(res.locals.user.email);
+
+    res.locals.work.save(err => {
+        if (err) {
+            return next(err);
+        }
+
+        return res.redirect(`/worklist/edit-work/${res.locals.work._id}`);
+    });
+}
+
+var getUserWorks = function (req, res, next) {
+    if (typeof res.locals.user === 'undefined') {
+        res.locals.user = req.session.user;
+    }
+
+    Work.find({ users: res.locals.user.email }, function (err, worklist) {
+        if (err) {
+            return next(err);
+        }
+
+        res.locals.worklist = worklist;
+        return next();
+    });
 }
 
 app.use('/register',
@@ -296,21 +333,29 @@ app.use('/worklist/new-work',
     isLoggedIn,
     havePermission(1),
     getWork,
+    //getUsers,
     saveWork,
     renderPage('work_edit_new'));
 
-app.use('/worklist/edit-work/:work_id/add-users',
+app.use('/worklist/edit-work/:work_id/add-user/:user_id',
     isLoggedIn,
     havePermission(1),
-    getUsers,
+    getUser,
     getWork,
-    addSelectedUsers,
-    renderPage('users_add_to_work'));
+    addSelectedUser);
+
+app.use('/worklist/edit-work/:work_id/remove-user/:user_id',
+    isLoggedIn,
+    havePermission(1),
+    getUser,
+    getWork,
+    removeSelectedUser);
 
 app.use('/worklist/edit-work/:work_id',
     isLoggedIn,
     havePermission(1),
     getWork,
+    getUsers,
     saveWork,
     renderPage('work_edit_new'));
 
@@ -325,6 +370,29 @@ app.use('/worklist',
     havePermission(1),
     getWorks,
     renderPage('worklist'));
+
+app.use('/user/worklist',
+    isLoggedIn,
+    //havePermission(0),
+    function (req, res, next) {
+        res.locals.alterview = null;
+
+        return next();
+    },
+    getUserWorks,
+    renderPage('worklist'));
+
+app.use('/users/worklist-user/:user_id',
+    isLoggedIn,
+    havePermission(1),
+    function (req, res, next) {
+        res.locals.alterview = null;
+
+        return next();
+    },
+    getUser,
+    getUserWorks,
+    renderPage('worklist'))
 
 app.use('/users/new-user',
     isLoggedIn,
@@ -361,7 +429,7 @@ app.post('/',
             return next();
         }
 
-        return res.redirect('/worklist');
+        return res.redirect('/user/worklist');
     },
     checkLoginInfo,
     sessionCreater,
@@ -373,7 +441,7 @@ app.get('/',
             return next();
         }
 
-        return res.redirect('/worklist');
+        return res.redirect('/user/worklist');
     },
     renderPage('index'));
 
