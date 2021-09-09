@@ -1,17 +1,15 @@
+const database = 'mongodb://localhost/CLXLCK';
+
 const bodyParser = require('body-parser');
 const express = require('express');
+const session = require('express-session');
+const mongoose = require('mongoose');
+const Schema = require('mongoose').Schema;
+const MongoStore = require('connect-mongo');
+
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.set('view engine', 'ejs');
-
-const mongoose = require('mongoose');
-const Schema = require('mongoose').Schema;
-const database = 'mongodb://localhost/CLXLCK';
-mongoose.connect(database, { useNewUrlParser: true, useUnifiedTopology: true });
-
-const MongoStore = require('connect-mongo');
-const session = require('express-session');
 app.use(session({
     store: MongoStore.create({ mongoUrl: database }),
     secret: 'some secret',
@@ -21,6 +19,9 @@ app.use(session({
         maxAge: 24 * 60 * 60 * 1000
     }
 }));
+app.set('view engine', 'ejs');
+
+mongoose.connect(database, { useNewUrlParser: true, useUnifiedTopology: true });
 
 require('./routing/routes')(app);
 

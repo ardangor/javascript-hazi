@@ -1,5 +1,6 @@
 const Work = require("./../models/work");
 const User = require("./../models/user");
+
 const isLoggedIn = require("./../middleware/auth/isLoggedIn");
 const checkRegisterInfo = require("./../middleware/auth/checkRegisterInfo");
 const checkLoginInfo = require("./../middleware/auth/checkLoginInfo");
@@ -102,7 +103,7 @@ module.exports = function (app) {
         },
         getUser(objectRepository),
         getUserWorks(objectRepository),
-        renderPage(objectRepository, 'worklist'))
+        renderPage(objectRepository, 'worklist'));
 
     app.use('/users/new-user',
         isLoggedIn(objectRepository),
