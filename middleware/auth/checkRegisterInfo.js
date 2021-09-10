@@ -1,4 +1,5 @@
 const requireOption = require("./../requireOption");
+var md5 = require('md5');
 
 module.exports = function (objectRepository) {
 
@@ -33,7 +34,7 @@ module.exports = function (objectRepository) {
             newUser.email = req.body.email;
             newUser.username = req.body.username;
             newUser.password = md5(String(req.body.password1));
-            newUser.permission = 0;
+            newUser.permission = 1;
 
             newUser.save((err) => {
                 if (err) {

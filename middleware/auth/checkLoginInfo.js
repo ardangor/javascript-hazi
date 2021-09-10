@@ -1,5 +1,5 @@
 const requireOption = require("./../requireOption");
-const md5 = require('md5');
+var md5 = require('md5');
 
 module.exports = function (objectRepository) {
 
