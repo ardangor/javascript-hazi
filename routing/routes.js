@@ -7,9 +7,12 @@ const checkLoginInfo = require("./../middleware/auth/checkLoginInfo");
 const sessionCreater = require("./../middleware/auth/sessionCreater");
 const havePermission = require("./../middleware/auth/havePermission");
 const destroySession = require("./../middleware/auth/destroySession");
+const emailValidation = require("./../middleware/auth/emailValidation");
+const passwordValidation = require("./../middleware/auth/passwordValidation");
 
 const getUsers = require("./../middleware/user/getUsers");
 const getUser = require("./../middleware/user/getUser");
+const getUserByEmail = require("./../middleware/user/getUserByEmail");
 const saveUser = require("./../middleware/user/saveUser");
 const deleteUser = require("./../middleware/user/deleteUser");
 const getUserWorks = require("./../middleware/user/getUserWorks");
@@ -22,6 +25,7 @@ const addSelectedUser = require("./../middleware/work/addSelectedUser");
 const removeSelectedUser = require("./../middleware/work/removeSelectedUser");
 
 const renderPage = require("./../middleware/renderPage");
+const  render  = require("ejs");
 
 module.exports = function (app) {
     const objectRepository = {
@@ -133,6 +137,22 @@ module.exports = function (app) {
 
     app.use('/logout',
         destroySession(objectRepository));
+
+    app.post('/forgot-password/email',
+        getUserByEmail(objectRepository),
+        emailValidation(objectRepository),
+        renderPage(objectRepository, 'forgot_password_email'));
+
+    app.get('/forgot-password/email',
+        renderPage(objectRepository, 'forgot_password_email'));
+
+    app.get('/forgot-password/new-password/:user_id',
+        renderPage(objectRepository, 'forgot_password_new_password'))
+
+    app.post('/forgot-password/new-password/:user_id',
+        getUser(objectRepository),
+        passwordValidation(objectRepository),
+        renderPage(objectRepository, 'forgot_password_new_password'))
 
     app.post('/',
         function (req, res, next) {
