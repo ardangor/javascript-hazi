@@ -2,6 +2,31 @@ const expect = require('chai').expect;
 const getWork = require("./../../../../middleware/work/getWork");
 
 describe('getWork middleware test', function () {
+    it('should be database error', function (done) {
+        const mw = getWork({
+            Work: {
+                findOne: (p1, cb) => {
+                    cb('databaseError', null);
+                }
+            }
+        });
+
+        const resMock = {
+            locals: {}
+        }
+
+        mw({
+            params: {
+                user_id: 10
+            }
+        },
+            resMock,
+            (err) => {
+                expect(err).to.be.eql('databaseError');
+                done();
+            });
+    });
+
     it('should return searched work', function (done) {
         const mw = getWork({
             Work: {
@@ -24,32 +49,6 @@ describe('getWork middleware test', function () {
             resMock,
             () => {
                 expect(resMock.locals).to.be.eql({ work: 'mockwork' });
-                done();
-            });
-    });
-
-
-    it('should be database error', function (done) {
-        const mw = getWork({
-            Work: {
-                findOne: (p1, cb) => {
-                    cb('databaseError', null);
-                }
-            }
-        });
-
-        const resMock = {
-            locals: {}
-        }
-
-        mw({
-            params: {
-                user_id: 10
-            }
-        },
-            resMock,
-            (err) => {
-                expect(err).to.be.eql('databaseError');
                 done();
             });
     });

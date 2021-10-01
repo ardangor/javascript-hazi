@@ -4,7 +4,7 @@
  * @param propertyName dependency name
  * @returns {*}
  */
- function requireOption(objectRepository, propertyName) {
+function requireOption(objectRepository, propertyName) {
     if (objectRepository && objectRepository[propertyName]) {
         return objectRepository[propertyName];
     }
