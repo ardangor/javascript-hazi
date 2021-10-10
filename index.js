@@ -1,5 +1,5 @@
-const database = 'mongodb://localhost/CLXLCK';
-//const database = "mongodb+srv://school-user:school-password@school-project.9nu3u.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+//const database = 'mongodb://localhost/CLXLCK';
+const database = "mongodb+srv://school-user:school-password@school-project.9nu3u.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 
 const bodyParser = require('body-parser');
 const express = require('express');
